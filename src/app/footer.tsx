@@ -5,9 +5,9 @@ export default function Footer() {
         <div className="basis-1/2 flex items-center justify-center">
           <span className="font-bold">Tuna Kirkoc&nbsp;</span>© 2023
         </div>
-        <div className="basis-1/2 flex items-center justify-center">
+        <a className="basis-1/2 flex items-center justify-center" href="https://github.com/Tunakirkoc/tuna-kirkoc-fr">
           Made by me
-        </div>
+        </a>
       </div>
     </footer>
   );
