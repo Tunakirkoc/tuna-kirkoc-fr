@@ -1,0 +1,192 @@
+export const metadata = {
+  title: "Groupe ESEO - Campus Angers",
+  description: "j'ai effectué un stage de 6 semaines à l'École Supérieure d'Électronique de l'Ouest (ESEO). Pendant ce stage, j'ai eu l'occasion de travailler sur diverses missions, notamment l'optimisation des laboratoires informatiques, l'installation d'Office, et la maintenance de Xibo CMS. Ces expériences m'ont permis de mettre en pratique mes connaissances en informatique et ont renforcé mon désir de poursuivre une carrière dans ce domaine.",
+  author: "Tuna Kirkoc",
+  date: "24/06/2022",
+  image: "/post/eseo-angers/image.png",
+  logo: "/post/eseo-angers/logo.png",
+  tags: [
+    "Expérience professionnelle"
+  ]
+}
+
+# Groupe ESEO - Campus Angers
+
+Tuna KIRKOC\
+[tuna@kirkoc.fr](mailto:tuna@kirkoc.fr)\
+[tuna.kirkoc.fr](https://tuna.kirkoc.fr)
+
+Lycée Public Polyvalent CHEVROLLIER\
+BTS SIO - Première année 2021/2022\
+Stage : 16 mai au 24 Juin (6 semaines)
+
+ESEO Angers - Grande Ecole d'Ingénieurs Généralistes\
+10 Bd Jean Jeanneteau, 49100 Angers\
+Tuteur : M. Bardet
+
+24/06/2022
+
+## Présentation de l'entreprise
+
+L'École supérieure d'électronique de l'Ouest (Groupe ESEO depuis 2006) est organisée sous la forme d'une association à but non lucratif, reconnue d'utilité publique spécialisée dans la formation d'Ingénieur (Bac+5) et de Bachelor (Bac+3) en informatique et électronique et forme plus de 1400 étudiant.  
+Créé en 1956, elle est située à Angers, Dijon, Paris-Vélizy et Shanghai. Elle emploie 120 permanents et travail avec 305 intervenants d'entreprise.
+L'ESEO est aussi présente dans le domaine de la recherche avec 4 groupes et 1 centre appliquée.
+
+## Les Missions confiées
+
+Après avoir été intégré au service informatique, on m'a donné quelques taches :
+
+### Les Missions Principales
+
+Mission 1 : L'amélioration et optimisation des différents labos informatiques de l'ESEO (constituer de plus de 150 PC) qui consiste à remplacer les disques durs par un SSD (stockage plus rapide) et de déployer une image du système d'exploitation (avec Fog) sur l'ensemble des PC. (Début mi-Juin)
+Mission 2 : Installation Office avec Office Deployment Tool et veille sur comment désinstaller Skype business 2016 via une règle GPO
+Mission 3 : Mise à jour et maintenance des affichages numériques et du CMS (Système de gestion de contenu) Xibo.
+
+### Les Missions Secondaires
+
+De plus, on m'a confié différentes missions comme la réparation de matériel (carte Wi-Fi, écran, etc.) ou l'installation, configuration et la maintenance de divers outils (PC ou stations de travail, Laptop, affichage numérique, station d'accueil, écran, etc.).
+
+## Tâches effectuées
+
+### Amélioration et optimisation des différents labos informatique
+
+Cette tâche consiste à diminuer et améliorer les ordinateurs des labos et de mettre en place des prise internet à disposition des étudiants pour les favoriser à utiliser leur propre matériel (méthode Bring Your own Devise).
+En regardant le planning des salles sur ESEO-NET j'ai pu créer une liste des salles à modifier :
+
+GAUSS ne bouge pas SSD à Monter 24 ✅
+PASCAL 12 Pcs existant SSD à Monter 12 attendre le 29 juin vu avec Alexandra examens
+SHAKESPEARE PCs existant don Remplacés par 12 EXEMPLAIRES TAYLOR all in one SSD à Monter 12 ✅
+RIEMANN 12 pcs existant SSD à Monter 12 ✅
+WEIERSTRASS Pcs existant don puis installer 12 EXEMPLAIRES RIEMANN + 4 EXEMPLAIRES PASCAL all in one SSD à Monter 12 ✅
+TAYLOR 12 pcs existant SSD à Monter 12 ✅
+EULER Pcs Existant don puis installer 16 PCs neufs
+RAMANUJAN 12 PCs existant SSD à Monter 12
+GALOIS don puis 12 EXEMPLAIRE RAMANUJAN SSD à Monter 12 ✅
+FARADAY don EXEMPLAIRE I7 réserve SSD à Monter 16 ✅
+BRANLY à voir s'il reste du temps
+DESCARTES SSD à Monter sur Pcs existant attendre le 29 juin vu avec Alexandra examens
+Reste PCs PASCAL en spare au SI
+
+### Installation Office avec Office Deployment Tool
+
+Cette tâche consistait à installer la Suite Office, Visio et Project sur de nouveaux ordinateurs via une commande.
+L'outil se compose d'un exécutable nommé « setup.exe » et d'un fichier XML qui compose la configuration de l'installation.
+La configuration est composée de différentes balises, tout d'abord nous devons ajouter une version d'office avec le type d'architecture, le Channel de mise à jour et le chemin de la source local :
+
+Puis nous devons annoncer les applications que nous voulons installer
+
+```xml
+<Configuration>
+  <Add OfficeClientEdition="64" Channel="Current" SourcePath="\\share\office" AllowCdnFallback="TRUE">
+  </Add>
+</Configuration>
+```
+
+Et celle que nous nous repart dans ce cas nous ne voulons pas installer Skype entreprise (Lync) et OneDrive Entreprise (Groove) et la langue :
+
+```xml
+<Configuration>
+  <Add OfficeClientEdition="64" Channel="Current" SourcePath="\\share\office" AllowCdnFallback="TRUE">
+    <Product ID="O365ProPlusRetail">
+      <Language ID="fr-fr" />
+      <ExcludeApp ID="Groove" />
+      <ExcludeApp ID="Lync" />
+      <ExcludeApp ID="Bing" />
+    </Product>
+    <Product ID="VisioProRetail">
+      <Language ID="fr-fr" />
+    </Product>
+    <Product ID="ProjectProRetail">
+      <Language ID="fr-fr" />
+    </Product>
+  </Add>
+</Configuration>
+```
+
+De plus nous devons faire en sorte qu'office se mettre à jour automatiquement, que l'installation soit silencieuse et de supprimer l'ancienne version :
+
+```xml
+<Configuration>
+  <Add OfficeClientEdition="64" Channel="Current" SourcePath="\\share\office" AllowCdnFallback="TRUE">
+    <Product ID="O365ProPlusRetail">
+      <Language ID="fr-fr" />
+      <ExcludeApp ID="Groove" />
+      <ExcludeApp ID="Lync" />
+      <ExcludeApp ID="Bing" />
+    </Product>
+    <Product ID="VisioProRetail">
+      <Language ID="fr-fr" />
+    </Product>
+    <Product ID="ProjectProRetail">
+      <Language ID="fr-fr" />
+    </Product>
+  </Add>
+  <Updates Enabled="TRUE" />
+  <RemoveMSI />
+  <Display Level="None" AcceptEULA="TRUE" />
+</Configuration>
+```
+
+Après avoir créé la configuration, j'ai téléchargé sur un serveur de partage les fichiers d'office en faisant cette commande :
+
+```powershell
+setup.exe /download config.xml
+```
+
+Puis nous pouvons packager la configuration et les fichiers dans en seul exécutable en faisant cette commande :
+
+```powershell
+setup.exe /packager config.xml \\server\share\app\
+```
+
+Puis pour installer office, il faudra juste exécuter l'application packager dans une GPO (Objet de Stratégie de Groupe) pour qu'office s'installe dès que l'ordinateur est connecté au domaine.
+
+De plus nous devons désinstaller Skype entreprise 2016 car nous allons migrer la téléphonie vers Teams j'ai suivi la même documentation :
+
+```xml
+<Configuration>
+  <Display Level="None" AcceptEULA="TRUE" />
+  <Remove>
+    <Product ID="SkypeforBusinessRetail">
+    </Product>
+  </Remove>
+</Configuration>
+```
+
+Puis en faisant une GPO en exécutant ce script ci-dessus à la prochaine connexion d'un utilisateur Skype for business 2016 sera désinstallé.
+
+### Mise à jour et Maintenance de Xibo et des affichages
+
+Xibo est un logiciel libre Open Source qui est utilisé pour diffuser du contenu vidéo à l'aide d'une interface Web sur des clients (ordinateur, TV, etc.). L'ESEO l'utilise pour diffuser des vidéos et ainsi que des informations en temps réel comme l'heure, la météo et les horaires de l'arrêt de Tramway Irigo le plus proche (exemple ci-dessous).
+
+![xibo-example](/post/eseo-angers/xibo-example.png)
+
+Cette tâche était de mettre à jour le CMS (Système de gestion de contenu) de Xibo et son système d'exploitation qui était Debian 8 parce que le support des mises à jour de sécurité (LTS) se terminera le 30 juin pour cette version, pour me connecter à cette machine virtuelle en SSH (Secure Shell). Après avoir suivi la documentation de migration et de la mise à jour de Xibo, le système était stable et mis à jour.
+
+![xibo-example](/post/eseo-angers/xibo-dashboard.png)
+
+Puis j'ai mis à jour l'ensemble des télévisions en me connectant à distance avec VNC (pour contrôler l'environnement de bureau d'un ordinateur à distance), après j'ai regardé sur l'interface du CMS pour voir si les télévisions ont bien été connectées. On peut voir que la télévision « Angers-XC-03 » n'est pas connectée car la télévision est hors-service.
+
+![xibo-example](/post/eseo-angers/xibo-list.png)
+
+## Les outils utilisés
+
+- ESEO-NET : Cette outils a été créé par l'ESEO, il permet de gérer les agendas des employé, le planning des salles, congé, notes des étudiants et de gérer les configurations des baies (switch, routeur et câblage) Comparable à Pronote, Elyco.
+- Xibo CMS est un logiciel d'affichage dynamique Open Source utilisé pour afficher différentes informations sur des télévision dans les couloirs de l'ESEO.
+- Centreon est une solution Open Source de supervision des applications, systèmes et réseaux en cours de cours de configuration par un de mes collègues à terme il permettra de surveiller les serveurs et les services.
+- GLPI (Gestionnaire Libre de Parc Informatique) est un outil utiliser pour gérer l'inventaire du parc informatique (Ordinateurs, logiciels, imprimante, matériel réseaux etc.).
+- Stormshield Network Security (SNS) est un firewall matériel, c'est une solution de sécurité stable et performante pour protéger les réseaux d'entreprise des cyberattaques. Protection en temps réel (prévention et détection d'intrusion, contrôle applicatif, antivirus), contrôle et supervision (filtrage d'URL, géolocalisation des IP, détection de vulnérabilités) ou encore filtrage de contenu (antispam, antispyware, anti-phishing).
+- Cisco ISE (Identity Services Engine) est une solution de contrôle de l'accès réseau, le profilage et le BYOD. Cette solution est mise en œuvre par une segmentation logicielle basée sur les rôles.
+- Fog est une solution gratuite de clonage et de gestion d'ordinateurs en réseau open source.
+- Suite Office Software as a Service (SaaS) est une solution de service par Microsoft qui peut être hébergé localement dans ce cas nous en utilisons pour Office 365 avec son serveur de mail et Skype entreprise (Teams).
+
+## Difficultés rencontrées et Solutions apportées
+
+J'ai rencontré peu de difficultés lors de mon stage. En effet, l'ESEO emploie plusieurs doctorants venus d'autre pays donc l'utilisation de l'anglais est primordiale.
+Néanmoins, Toutefois au bout de quelques semaines, j'ai su m'adapter à l'environnement de l'entreprise et j'ai su gérer les missions confiées.
+
+## Conclusion
+
+Pour conclure, ce stage a été très enrichissant pour moi cela m'a permis de mettre en relation ce que j'ai appris cette année et d'apprendre de nouvelles choses.
+Je n'ai pas réussi à atteindre tout tous les objectifs car la durée de ce stage était courte c'est donc pour cela que j'ai proposé mon aide de continuer à travailler avec le service informatique pendant le mois de juillet.
+Ce stage m'a conforté dans mon choix de carrière professionnelle et confirmé mon souhait de me spécialiser dans ce métier.

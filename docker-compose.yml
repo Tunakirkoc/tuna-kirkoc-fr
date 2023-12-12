@@ -1,0 +1,13 @@
+services:
+  tuna-kirkoc-fr:
+    build: .
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.tuna-kirkoc-fr.rule=Host(`tuna.kirkoc.fr`)
+      - traefik.http.routers.tuna-kirkoc-fr.entrypoints=https
+      - traefik.http.routers.tuna-kirkoc-fr.tls=true
+      - traefik.http.routers.tuna-kirkoc-fr.tls.certresolver=letsencrypt-prod
+networks:
+  traefik:
+    external: true

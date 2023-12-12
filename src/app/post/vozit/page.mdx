@@ -1,0 +1,447 @@
+export const metadata = {
+  title: "Compte Rendu Stage VOZit",
+  description: "Presentation de mon stage chez VOZit, spécialisée en téléphonie d'entreprise. Mon travail comprenait la configuration de solutions informatiques, la migration vers Linux et la création de scripts.",
+  author: "Tuna Kirkoc",
+  date: "13/04/2023",
+  image: "/post/vozit/image.png",
+  logo: "/post/vozit/logo.png",
+  tags: [
+    "Expérience professionnelle"
+  ]
+}
+
+# Compte Rendu Stage VOZit
+
+Tuna Kirkoc\
+[tuna@kirkoc.fr](mailto:tuna@kirkoc.fr)\
+[tuna.kirkoc.fr](https://tuna.kirkoc.fr)
+
+Lycée Public Polyvalent CHEVROLLIER\
+BTS SIO - Deuxième année 2022/2023\
+Stage : 6 février au 18 février et du 27 février au 1er avril 2023 (7 semaines)
+
+VOZit\
+02 41 24 89 50\
+Tuteur : M. Bastos
+
+13/04/2023
+
+## Présentation de l'entreprise
+
+VozIT est une société par actions simplifiée unipersonnelle spécialisée dans la téléphonie d'entreprise, le déploiement et l'utilisation de solutions informatiques et télécoms qui exerce son activité depuis 6 ans.
+
+## Les Missions confiées
+
+### Déploiement d'un environnement de test
+
+Cette mission consistait à mettre en place une solution de virtualisation afin d'y héberger plusieurs VM comme un pare-feu Pfsense pour gérer l'accès aux réseaux local, une machine virtuelle sous Windows 10 pour aux interfaces Web du réseau et un serveur de teste Asterisk pour le développement d'une application. Dans ce cas nous avons choisi Proxmox Virtual Environment car il est open source et basé sur de Debian.
+
+Après avoir installé le système d'exploitation j'ai pu modifier la configuration réseaux de la Node et donc pus me connecter sur l'interface web de Proxmox sur le port 8006 par défaut.
+
+![environment-test-proxmox-summary](/post/vozit/environment-test-proxmox-summary.png)
+
+Pfsense a besoin de deux interfaces, pour cela j'ai créé un deuxième linux Bridge, il s'agit d'un pont qui peut être considéré comme un switch virtuel auquel les invités (VM) et les interfaces physiques sont connectés.
+
+![environment-test-proxmox-network](/post/vozit/environment-test-proxmox-network.png)
+
+Après ceci j'ai créé la VM pour Pfsense avec deux interfaces une sur le WAN et l'autre sur le LAN puis je l'ai démarré et assigné des IP aux deux interfaces.
+
+![environment-test-pfsense](/post/vozit/environment-test-pfsense.png)
+
+Pour accéder à l'interface web, j'ai dû créer une VM sous Windows 10 sur le même bridge (le même réseau local) en suivant la documentation suivante :
+
+[https://pve.proxmox.com/wiki/Windows_10_guest_best_practices](https://pve.proxmox.com/wiki/Windows_10_guest_best_practices)
+
+#### Installation et configuration d'Asterisk
+
+Il existe plusieurs solutions pour installer Asterisk, par exemple FreePBX qui est une distribution Linux avec Asterisk et une interface de gestion Web, vous pouvez compiler et installer Asterisk (et ses outils associés) à partir du code source cela utiliser pour tester les dernières versions et nous pouvons simplement installer les packages d'Asterisk et ses outils associés à l'aide du gestionnaire de packages sur linux sur la version stable (16).
+
+```bash
+apt-get install asterisk asterisk-dahdi asterisk-opus
+```
+
+Dans ce cas j'ai installé Asterisk depuis le gestionnaire de package Debian 11 fois installer j'ai pu créer les premiers utilisateurs de tests, voici ce que contient le fichier user.conf dans le dossier /etc/asterisk/ :
+
+Ceci est une Template elle nous servira pour créer les prochains utilisateurs
+
+![asterisk-user-template](/post/vozit/asterisk-user-template.png)
+
+On peut voir ci-dessous la création de l'utilisateur `Tuna` qui a pour mots de passe `password`, le numéro de sa boîte vocale est 100, fais partie du deuxième département et son numéro de téléphone est 100
+
+![asterisk-user-tuna](/post/vozit/asterisk-user-tuna.png)
+
+Le Dial plan permet de configurer Asterisk sûr comment router et manipuler les appels.
+
+Par exemple voici une extension concernent le département 1 :
+
+![asterisk-dialplan-department1-1](/post/vozit/asterisk-dialplan-department1-1.png)
+
+Si le numéro demandé est de 100 à 199 il sera composé pendant 40 secondes s'il n'y a pas de réponse l'utilisateur sera envoyé sur la boîte vocale du numéro composer.
+
+![asterisk-dialplan-department1-2](/post/vozit/asterisk-dialplan-department1-2.png)
+
+Si le numéro 999 est demandé l'utilisateur sera renvoyé sur sa boîte vocale.
+
+![asterisk-dialplan-department1-3](/post/vozit/asterisk-dialplan-department1-3.png)
+
+Si le numéro 666 est appelé asterisk repondéra et jouera le son [tt-weasels](https://www.asterisksounds.org/fr-fr/sounds/tt-weasels) puis raccrochera. Puis je me suis connecté avec l'utilisateur 100 sur le téléphone :
+
+![asterisk-phone](/post/vozit/asterisk-phone.png)
+
+Et sur un Softphone (MicroSIP) je me suis connecté avec l'utilisateur 200 :
+
+![asterisk-microsip](/post/vozit/asterisk-microsip.png)
+
+Puis j'ai appelé le numéro 200 avec l'utilisateur 100 :
+
+![asterisk-microsip-call](/post/vozit/asterisk-microsip-call.png)
+
+Donc si je l'utilisateur ne réponds pas dans les 40 secondes je serai redirigée vers sa boite vocale. On constater le déroulée de ces étapes dans les logs :
+
+![asterisk-logs](/post/vozit/asterisk-logs.png)
+
+Enfin, l'utilisateur devra appeler le 999 pour écouter le nouveau message vocal.
+
+#### Configuration du Websocket
+
+Certains Softphone (interface Web et app IOS/Android) utilise WebRTC pour Web Real-Time Communication, est une nouvelle technologie ouverte de communication en temps réel pour navigateurs web, nous aurons besoin de ce service pour une nouvelle application.
+
+Tout d'abord, j'ai désactivé que le fait que SIP écoute sur le web socket dans le fichier sip.conf :
+
+![asterisk-sip-conf](/post/vozit/asterisk-sip-conf.png)
+
+Puis il faut activer le serveur HTTP dans le fichier http.conf :
+
+![asterisk-http-conf](/post/vozit/asterisk-http-conf.png)
+
+Ensuite pour que les donner transmit sois chiffré il faut utiliser le protocole HTTPS pour cela il faut créer des certificats TLS puis ajouter les configurations suivantes :
+
+![asterisk-tls-conf](/post/vozit/asterisk-tls-conf.png)
+
+Après avoir redémarré Asterisk, je me suis connecté sur la console d'Asterisk et avoir exécuté la commander `http show status` pour afficher le statut des serveurs HTTP et HTTPS :
+
+![asterisk-http-status](/post/vozit/asterisk-http-status.png)
+
+On peut constater que le serveur HTTP et HTTPS sont activés ensuite je suis allé sur la page web `https://192.168.5.200:8089/httpstatus`
+
+![asterisk-http-status-web](/post/vozit/asterisk-http-status-web.png)
+
+Puis j'ai configuré PJSIP
+
+En premier temps il faut autoriser le transport via le Websocket Secure puis créer un client nommer webrtc_client avec pour mot de passe `test` :
+
+![asterisk-pjsip-conf](/post/vozit/asterisk-pjsip-conf.png)
+
+Puis j'ai créé une extension de test :
+
+![asterisk-extension](/post/vozit/asterisk-extension.png)
+
+Puis j'ai utilisé un site web pour tester les appelle WebRTC :
+
+[https://www.doubango.org/sipml5/](https://www.doubango.org/sipml5/)
+
+J'ai entré les informations suivantes :
+
+![asterisk-webrtc](/post/vozit/asterisk-webrtc.png)
+
+Puis j'ai appelé le numéro 200 :
+
+![asterisk-webrtc-call](/post/vozit/asterisk-webrtc-call.png)
+
+On peut voir que la connexion s'établie avec le protocole PJSIP puis le transfert de donné se fais avec le protocole RTP :
+
+![asterisk-webrtc-logs](/post/vozit/asterisk-webrtc-logs.png)
+
+### Migration d'un profil Téléacteur
+
+Ce projet consiste a migré un profil téléacteur d'un système Windows 10 vers un système linux (Ubuntu 22.04)
+
+#### Installation du client OpenVPN
+
+Tout d'abord, il faut installer le paquet `openvpn`, ensuite il faut importer les fichiers de configuration pour cela, il faut copier le fichier de configuration et les certificats dans le dossier `/etc/openvpn` et renommer le fichier de configuration finissant par `.ovpn` en `client.conf` :
+
+```bash
+cp pfsense-UDP4-1195-cofig.ovpn client.conf
+```
+
+Puis pour activer le service, il suffit d'exécuter la commande `systemctl enable openvpn@` suivi du nom du fichier de configuration, par exemple :
+
+```bash
+systemctl enable openvpn@client
+```
+
+Pour démarrer le service VPN, il faut exécuter la commande suivante :
+
+```bash
+systemctl start openvpn@client
+```
+
+Enfin, nous pouvons afficher le statut du service avec cette commande :
+
+```bash
+systemctl status openvpn@client
+```
+
+![migration-openvpn](/post/vozit/migration-openvpn.png)
+
+#### Installation de Mocha TN3270 sous linux
+
+Mocha TN3270 est un logiciel fermé sous licence qui fournit un émulateur de terminal d'IBM 3270 qui permet d'accéder à un IBM Mainframe
+
+Pour l'exécuter sur Linux je me suis fourni de Wine qui est une couche de compatibilité capable d'exécuter des applications Windows sur divers systèmes d'exploitation comme Linux, MacOs et BSD
+
+En premier temps, il faut installer `wine` et `winetricks` :
+
+```bash
+apt install wine winetricks 
+wineboot --init
+```
+
+Dans notre cas Mocha TN3270 a besoin du framework .NET 4.5 minimum et de certaines polices pour cela nous pouvons utiliser l'utilitaire `winetricks` pour les installer en faisant la commande suivante :
+
+```bash
+winetricks --force dotnet45 corefonts allfonts
+```
+
+Ensuite, nous pouvons installer TN3270 en téléchargeant le fichier d'installer et d'exécuter avec la commande suivante :
+
+```bash
+wget https://mochasoft.dk/tn3270.msi
+msiexec /i tn3270.msi
+```
+
+Le WinePrefix (répertoire où Wine stocke ses données) par défaut se situe dans `~/.wine`. Pour l'exécuter, il faudra exécuter la commande suivante :
+
+```bash
+wine /home/clientela/.wine/drive_c/Program\ Files/MochaSoft/Mocha\ TN3270\ for\ Vista/tn3270.exe /H 192.168.1.10 /P 635
+```
+
+#### Création des raccourcis de bureau
+
+Les raccourcis de bureau sur Ubuntu sont un fichier texte situé dans `~/Bureau` se terminant par `.desktop` :
+
+```bash
+nano ~/Bureau/Loggia.desktop
+```
+
+Tout d'abord, le contenue du fichier doit commencer par `[Desktop Entry]` pour indiquer au système que ce fichier est un raccourci. Puis par la variable `Exec` est la commande du programme à exécuter, la variable `Name` qui est le nom qui sera affiché sur le bureau et la variable `Icon` est le chemin d'accès de l'icône du raccourci.
+
+La commande `xdg-open`, permet de lancer le logiciel par défaut au type de fichier. Par example :
+
+```bash
+xdg-open ma_photo.png
+xdg-open ma_photo.gif
+xdg-open ma_photo.jpg
+xdg-open ma_video.mp4
+xdg-open ma_music.mp3
+xdg-open https://example.com/
+```
+
+Par exemple, ce raccourci servira à ouvrir un site internet avec le navigateur par défaut :
+
+```bash
+[Desktop Entry]
+Type=Application
+Exec=xdg-open https://mail.example.com/
+Name=webmail
+Icon=applications-internet
+```
+
+Celui-ci est un raccourci qui servira pour exécuter le logiciel TN3270 qui ouvrira une connexion sur 192.168.1.10 sur le port 635 :
+
+```bash
+[Desktop Entry]
+Type=Application
+Exec=wine /home/clientela/.wine/drive_c/Program\ Files/MochaSoft/Mocha\ TN3270\ for\ Vista/tn3270.exe /H 192.168.1.10 /P 635
+Name=Loggia
+Icon=/home/clientela/.local/share/icons/hicolor/48x48/apps/BAC1_tn3270.0.png
+```
+
+Une fois enregistré, cela crée un nouveau raccourci pour l'application. Cependant, contrairement à Windows, le raccourci sur le bureau apparaît grisé. Cela signifie qu'il n'est pas encore actif.
+
+Pour l'activer, faites un clic droit sur le raccourci et sélectionnez **Autoriser l'exécution**.
+
+![migration-raccourci](/post/vozit/migration-raccourci.png)
+
+#### Création d'un script de configuration
+
+Ce script a pour but d'automatiser le paramétrage de la machine par exemple renommer la machine, de configurer les identifiants de connexion du VPN et du softphone.
+
+Tout d'abord, je demande le nom de la machine ainsi que le mot de passe du VPN et du softphone :
+
+```bash
+# Demande l'nom de la machine
+read -p "Entrez le nom de la machine (STA-XXXX): " hostname
+
+# Demande le mot de passe VPN
+read -sp "Entrez le mot de passe VPN : " vpn_password
+
+# Demande le mot de passe du softphone
+read -sp "Entrez le mot de passe du softphone : " softphone_password
+```
+
+Puis je copie les identifiant du VPN dans le fichier /etc/openvpn/pass.txt puis je modifie les permissions du fichier pour qu'il soit accessible uniquement par l'utilisateur root pour que le VPN démarre automatiquement :
+
+```bash
+# Copie les identifiants VPN dans le fichier /etc/openvpn/pass.txt
+echo "$hostname" > /etc/openvpn/pass.txt
+echo "$vpn_password" >> /etc/openvpn/pass.txt
+
+# Modifie les permissions du fichier pour qu'il soit accessible uniquement par l'utilisateur root
+chmod 600 /etc/openvpn/pass.txt
+```
+
+Le fichier de configuration de Linphone se trouve dans ~/.config/linphone/linphonerc et contenu dans le fichier le mot de passe est stocké en format haché MD5 :
+
+`HA1 = MD5(username:realm:password)`
+
+```bash
+# Prend les 3 derniers caractères de l'utilisateur, ajoute "2" devant et copie l'identifiant dans Linphone
+softphone_username=$(echo "$hostname" | tail -c 4 | sed "s/^/2/")
+
+# Génère le ha1 md5 du mot de passe
+ha1=$(echo -n "${softphone_username}:${softphone_domain}:${softphone_password}" | md5sum | awk '{print $1}')
+
+# mettre à jour le fichier linphonerc
+cat << EOF >> ~/.config/linphone/linphonerc
+
+[proxy_0]
+reg_proxy=<sip:${softphone_domain};transport=udp>
+reg_identity=sip:${softphone_username}@${softphone_domain}
+contact_parameters=message-expires=604800
+quality_reporting_enabled=0
+quality_reporting_interval=0
+reg_expires=3600
+reg_sendregister=1
+publish=0
+avpf=0
+avpf_rr_interval=1
+dial_escape_plus=0
+privacy=32768
+push_notification_allowed=0
+idkey=proxy_config_VDVY~lrvKOJgmFH
+publish_expires=-1
+
+[auth_info_0]
+username=${softphone_username}
+ha1=${ha1}
+realm=asterisk
+domain=${softphone_username}
+algorithm=MD5
+EOF
+
+echo "Fichier linphonerc mis à jour avec le nom d'utilisateur, le mot de passe et les informations de domaine"
+```
+
+Puis je renomme la machine :
+
+```bash
+hostnamectl set-hostname $hostname
+
+# Affiche un message de confirmation
+echo "Les identifiants VPN ont été enregistrés dans /etc/openvpn/pass.txt, l'identifiant Linphone est $softphone_username et la machine a été renommée en $hostname."
+```
+
+Voici le script complet :
+
+```bash
+#!/bin/bash
+
+softphone_domain=softphone.vozit.fr
+
+# Demande l'nom de la machine
+read -p "Entrez le nom de la machine (STA-XXXX): " hostname
+
+# Demande le mot de passe VPN
+read -sp "Entrez le mot de passe VPN : " vpn_password
+
+# Demande le mot de passe du softphone
+read -sp "Entrez le mot de passe du softphone : " softphone_password
+
+# Copie les identifiants VPN dans le fichier /etc/openvpn/pass.txt
+echo "$hostname" > /etc/openvpn/pass.txt
+echo "$vpn_password" >> /etc/openvpn/pass.txt
+
+# Modifie les permissions du fichier pour qu'il soit accessible uniquement par l'utilisateur root
+chmod 600 /etc/openvpn/pass.txt
+
+# Prend les 3 derniers caractères de l'utilisateur, ajoute "2" devant et copie l'identifiant dans Linphone
+softphone_username=$(echo "$hostname" | tail -c 4 | sed "s/^/2/")
+
+# Génère le ha1 md5 du mot de passe
+ha1=$(echo -n "${softphone_username}:${softphone_domain}:${softphone_password}" | md5sum | awk '{print $1}')
+
+# mettre à jour le fichier linphonerc
+cat << EOF >> ~/.config/linphone/linphonerc
+
+[proxy_0]
+reg_proxy=<sip:${softphone_domain};transport=udp>
+reg_identity=sip:${softphone_username}@${softphone_domain}
+contact_parameters=message-expires=604800
+quality_reporting_enabled=0
+quality_reporting_interval=0
+reg_expires=3600
+reg_sendregister=1
+publish=0
+avpf=0
+avpf_rr_interval=1
+dial_escape_plus=0
+privacy=32768
+push_notification_allowed=0
+idkey=proxy_config_VDVY~lrvKOJgmFH
+publish_expires=-1
+
+[auth_info_0]
+username=${softphone_username}
+ha1=${ha1}
+realm=asterisk
+domain=${softphone_username}
+algorithm=MD5
+EOF
+
+echo "Fichier linphonerc mis à jour avec le nom d'utilisateur, le mot de passe et les informations de domaine"
+
+# Renomme la machine avec le nom entré par l'utilisateur
+hostnamectl set-hostname $hostname
+
+# Affiche un message de confirmation
+echo "Les identifiants VPN ont été enregistrés dans /etc/openvpn/pass.txt, l'identifiant Linphone est $softphone_username et la machine a été renommée en $hostname."
+```
+
+## Outils et logiciels utilisé
+
+### Proxmox VE
+
+Proxmox Virtual Environment est un système d'exploitation de virtualisation libre basée sur l'hyperviseur Linux KVM et Debian. De plus il offre aussi une solution de containers avec LXC.
+
+### PfSense
+
+PfSense est un système d'exploitation open source ayant pour but la mise en place de routeur/pare-feu basé sur le système d'exploitation FreeBSD.
+
+### Centreon
+
+Centreon est une solution de supervision des applications, systèmes et réseaux, basé sur les concepts de Nagios.
+
+### Bluemind
+
+BlueMind est une suite logicielle libre de messagerie d'entreprise, d'agendas et de travail collaboratif. BlueMind est développé en France et se présente comme une alternative à Microsoft Exchange ou 365.
+
+### Redmine
+
+Redmine est une application web libre de gestion de projets, développée en Ruby sur la base du framework Ruby on Rails. Redmine ma permit de gérer les différents projets/taches qui m'ont été assignés :
+
+![redmine-taches](/post/vozit/redmine-taches.png)
+
+![redmine-projets](/post/vozit/redmine-projets.png)
+
+### Asterisk
+
+Asterisk est un autocommutateur téléphonique privé, libre et pour systèmes GNU/Linux. Il permet notamment la messagerie vocale, l'utilisation de fonctionnalités d'attente, et la tenue de conférences.
+
+## Difficultés rencontrées et solutions apportées
+
+Je n'ai pas rencontré de difficultés majeures lors de mes missions. Grâce à mes connaissances préalables et aux documentations, j'ai pu mettre en place l'environnement de test et configurer les différents outils et logiciels demandés sans rencontrer de problèmes significatifs.
+
+## Conclusion
+
+Au cours de ce stage chez VOZit, j'ai appris énormément sur le monde de l'entrepreneuriat en mettant en place des solutions de virtualisation pour la téléphonie d'entreprise et la gestion des réseaux. Grâce à ce stage, j'ai pu acquérir des compétences techniques et des connaissances pratiques en matière de déploiement de solutions télécoms et informatiques pour les entreprises et je suis convaincu que cette expérience professionnelle sera très utile pour ma carrière future.
